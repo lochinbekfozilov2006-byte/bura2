@@ -10,7 +10,8 @@ U KV_REST_API_URL va KV_REST_API_TOKEN o'zgaruvchilarini o'zi qo'shadi.
 Muhit o'zgaruvchilari:
   ADMIN_CODE   profil kodi; kiritgan o'yinchiga eng kuchli kartalar tushadi (maxfiy so'z qo'ying)
   HAND_SIZE    qo'ldagi kartalar soni (default 4)
-  WIN_POINTS   shuncha ochko to'plagan darrov yutadi (default 61)
+  MATCH_LIMIT  o'yin necha balgacha boradi, yetgan yutqazadi (default 12)
+  BURA_PEN     Bura (maxsus qo'l) uchun raqibga beriladigan bal (default 4)
 Kompyuteringizda Redis'siz ham ishlaydi (xotirada saqlaydi): python main.py
 """
 import itertools
@@ -26,7 +27,8 @@ from page import HTML
 
 ADMIN_CODE = os.getenv("ADMIN_CODE", "admin")
 HAND_SIZE = int(os.getenv("HAND_SIZE", "4"))
-WIN_POINTS = int(os.getenv("WIN_POINTS", "61"))
+MATCH_LIMIT = int(os.getenv("MATCH_LIMIT", "12"))
+BURA_PEN = int(os.getenv("BURA_PEN", "4"))
 BOT_MIN = float(os.getenv("BOT_MIN", "1.0"))
 BOT_MAX = float(os.getenv("BOT_MAX", "1.9"))
 REDIS_URL = os.getenv("UPSTASH_REDIS_REST_URL") or os.getenv("KV_REST_API_URL")
@@ -110,12 +112,15 @@ def can_beat(att, dfn, trump):
 
 
 FIELDS = ["players", "deck", "trump_card", "trump", "hands", "scores", "table", "last",
-          "result", "boost", "turn", "phase", "bot_at", "ver", "made"]
+          "result", "boost", "turn", "phase", "bot_at", "ver", "made", "pen", "rid", "round"]
 
 
 class Game:
     def __init__(self, data):
         self.__dict__.update(data)
+        for k, v in (("pen", [0, 0]), ("rid", 0), ("round", 0)):
+            if not hasattr(self, k):
+                setattr(self, k, v)
 
     def dump(self):
         return {k: getattr(self, k) for k in FIELDS}
@@ -141,15 +146,36 @@ class Game:
         self.boost = [a and not b, b and not a]   # ikkalasi admin bo'lsa oddiy o'yin
         self.turn = first
         self.phase = "attack"
+        self.rid += 1
+        self.round += 1
         self.refill(first)
         self.refill(1 - first)
+        kinds = [self.special_kind(h) for h in self.hands]
+        if kinds[0] and kinds[1]:
+            kinds = [None, None]          # ikkalasida bo'lsa, oddiy o'ynaladi
         for s in (0, 1):
-            h = self.hands[s]
-            if len(h) == HAND_SIZE and all(suit(c) == self.trump for c in h):
-                self.finish(s, "Bura: qo'lda faqat kozirlar")
+            if kinds[s]:
+                add = [0, 0]
+                add[1 - s] = BURA_PEN
+                self.end_round(s, "Bura: " + kinds[s], add, special=True, hand=list(self.hands[s]))
                 break
         self.ver = getattr(self, "ver", 0) + 1
         self.arm()
+
+    def special_kind(self, hand):
+        """Dastlabki qo'l maxsus bo'lsa, o'yin yurishsiz tugaydi (Bura)."""
+        if len(hand) != HAND_SIZE or HAND_SIZE < 4:
+            return None
+        r = [strength(c) for c in hand]
+        if all(suit(c) == self.trump for c in hand):
+            return "hammasi kozir"
+        if r.count(8) >= 4:
+            return "4 ta tuz"
+        if r.count(7) >= 4:
+            return "4 ta o'nlik"
+        if r.count(8) >= 3 and r.count(7) >= 1:
+            return "3 ta tuz va o'nlik"
+        return None
 
     def refill(self, seat):
         h = self.hands[seat]
@@ -171,8 +197,30 @@ class Game:
     def actor(self):
         return self.turn if self.phase == "attack" else 1 - self.turn
 
-    def finish(self, winner, why):
-        self.result = {"winner": winner, "why": why}
+    def end_round(self, winner, why, add, special=False, hand=None):
+        """Raund tugadi: yutqazgan o'yinchiga bal (jarima) yoziladi, 12 ga yetgan o'yinni yutqazadi."""
+        self.pen = [self.pen[0] + add[0], self.pen[1] + add[1]]
+        over = max(self.pen) >= MATCH_LIMIT
+        mw = None
+        if over and self.pen[0] != self.pen[1]:
+            mw = 0 if self.pen[0] < self.pen[1] else 1
+        self.result = {"winner": winner, "why": why, "add": add, "special": special,
+                       "hand": hand or [], "match": {"over": over, "winner": mw}}
+
+    def match_over(self):
+        return bool(self.result and self.result.get("match", {}).get("over"))
+
+    def advance(self):
+        """Keyingi raund (yoki o'yin tugagan bo'lsa yangi o'yin). Raundni yutqazgan boshlaydi."""
+        r = self.result
+        if r and r.get("match", {}).get("over"):
+            self.pen = [0, 0]
+            self.round = 0
+            first = random.randint(0, 1)
+        else:
+            w = r.get("winner") if r else None
+            first = (1 - w) if w is not None else random.randint(0, 1)
+        self.new_round(first)
 
     def arm(self):
         if not self.result and self.players[self.actor()]["bot"]:
@@ -181,8 +229,10 @@ class Game:
             self.bot_at = 0
 
     def forfeit(self, leaver):
-        if not self.result:
-            self.finish(1 - leaver, "Raqib o'yindan chiqdi")
+        if not self.match_over():
+            self.result = {"winner": 1 - leaver, "why": "Raqib o'yindan chiqdi", "add": [0, 0],
+                           "special": False, "hand": [],
+                           "match": {"over": True, "winner": 1 - leaver}}
             self.ver += 1
             self.bot_at = 0
 
@@ -233,21 +283,30 @@ class Game:
         self.refill(1 - winner)
         self.turn = winner
         self.phase = "attack"
-        if self.scores[winner] >= WIN_POINTS:
-            self.finish(winner, f"{self.scores[winner]} ochko to'pladi")
-        elif not self.hands[winner] or not self.hands[1 - winner]:
+        if not self.hands[winner] or not self.hands[1 - winner]:
             a, b = self.scores
             if a == b:
-                self.finish(None, f"Durang, {a}:{b}")
+                self.end_round(None, f"Durang, {a}:{b}", [0, 0])
             else:
-                self.finish(0 if a > b else 1, f"Hisob {max(a, b)}:{min(a, b)}")
+                w = 0 if a > b else 1
+                hi, lo = max(a, b), min(a, b)
+                # yutqazgan jarimasi: 61-90 ochko -> 2 bal, 91-119 -> 4 bal, hamma ochko (lo=0) -> 6 bal
+                add = [0, 0]
+                add[1 - w] = 6 if lo == 0 else (4 if hi >= 91 else 2)
+                self.end_round(w, f"Hisob {hi}:{lo}", add)
         return None
 
     def state_for(self, seat, gid):
         over = self.result is not None
         opp = self.players[1 - seat]
+        res = None
+        if self.result:
+            res = dict(self.result)
+            add = res.get("add", [0, 0])
+            res["add"] = [add[seat], add[1 - seat]]        # [menga, raqibga]
         return {
-            "gid": gid, "v": self.ver,
+            "gid": gid, "v": self.ver, "rid": self.rid, "round": self.round, "limit": MATCH_LIMIT,
+            "pen": [self.pen[seat], self.pen[1 - seat]],
             "mode": "bot" if opp["bot"] else "online",
             "me": seat, "opp": opp["name"],
             "hand": self.hands[seat], "oppN": len(self.hands[1 - seat]),
@@ -255,7 +314,7 @@ class Game:
             "trumpCard": self.trump_card if self.trump_card in self.deck else None,
             "actor": self.actor(), "phase": self.phase, "table": self.table,
             "myScore": self.scores[seat], "scores": self.scores if over else None,
-            "last": self.last, "result": self.result,
+            "last": self.last, "result": res,
         }
 
 
@@ -383,7 +442,7 @@ def h_state(d, pid):
     if d.get("hb"):
         touch(gid, seat)
         opp = g.players[1 - seat]
-        if (not opp["bot"] and not g.result and time.time() - g.made > SEEN_TTL
+        if (not opp["bot"] and not g.match_over() and time.time() - g.made > SEEN_TTL
                 and not rcmd("GET", f"seen:{gid}:{1 - seat}")):
             g.forfeit(1 - seat)
             changed = True
@@ -420,7 +479,7 @@ def h_again(d, pid):
     opp = g.players[1 - seat]
     if opp["bot"] or rcmd("GET", f"again:{gid}:{1 - seat}"):
         rcmd("DEL", f"again:{gid}:{1 - seat}")
-        g.new_round(random.randint(0, 1))
+        g.advance()
         save(gid, g)
         return game_resp(g, seat, gid)
     rcmd("SET", f"again:{gid}:{seat}", 1, "EX", 600)
