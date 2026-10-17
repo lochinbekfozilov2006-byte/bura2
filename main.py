@@ -166,15 +166,16 @@ class Game:
         """Dastlabki qo'l maxsus bo'lsa, o'yin yurishsiz tugaydi (Bura)."""
         if len(hand) != HAND_SIZE or HAND_SIZE < 4:
             return None
-        r = [strength(c) for c in hand]
         if all(suit(c) == self.trump for c in hand):
             return "hammasi kozir"
-        if r.count(8) >= 4:
-            return "4 ta tuz"
-        if r.count(7) >= 4:
-            return "4 ta o'nlik"
-        if r.count(8) >= 3 and r.count(7) >= 1:
-            return "3 ta tuz va o'nlik"
+        r = [strength(c) for c in hand]
+        if all(x >= 7 for x in r):                  # faqat tuz (8) va o'nlik (7) dan iborat qo'l
+            a, t = r.count(8), r.count(7)
+            if t == 0:
+                return f"{a} ta tuz"
+            if a == 0:
+                return f"{t} ta o'nlik"
+            return f"{a} ta tuz va {t} ta o'nlik"
         return None
 
     def refill(self, seat):

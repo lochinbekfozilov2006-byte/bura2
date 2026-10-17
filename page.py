@@ -227,7 +227,7 @@ details.rules ul{margin:6px 0 10px;padding-left:18px}
       <li>Yutgan 91 dan 119 gacha olsa: raqibga 4 bal</li>
       <li>Raqib bitta ham ochko ola olmasa: 6 bal</li>
     </ul>
-    <p><b>Bura:</b> dastlabki qo'lda 4 ta tuz, 4 ta o'nlik, 3 ta tuz bilan bitta o'nlik yoki hammasi kozir bo'lsa, kartalar o'zi tashlanadi va raund darrov tugaydi. Raqibga 4 bal yoziladi.</p>
+    <p><b>Bura:</b> dastlabki qo'lda 4 ta karta ham tuz yoki o'nlik bo'lsa (4 tuz, 4 o'nlik, 3 tuz va o'nlik, 2 tuz va 2 o'nlik...) yoki hammasi kozir bo'lsa, kartalar o'zi tashlanadi va raund darrov tugaydi. Raqibga 4 bal yoziladi.</p>
   </details>
 
   <div class="codefield">
