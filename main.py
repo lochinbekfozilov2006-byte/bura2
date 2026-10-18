@@ -12,6 +12,8 @@ Muhit o'zgaruvchilari:
   HAND_SIZE    qo'ldagi kartalar soni (default 4)
   MATCH_LIMIT  o'yin necha balgacha boradi, yetgan yutqazadi (default 12)
   BURA_PEN     Bura (maxsus qo'l) uchun raqibga beriladigan bal (default 4)
+  BURA_POINTS  qo'ldagi kartalar ochkosi shuncha yoki ko'p bo'lsa Bura (default 40)
+  NEXT_DELAY   raund natijasidan keyin keyingi raund o'zi boshlanguncha soniya (default 6)
 Kompyuteringizda Redis'siz ham ishlaydi (xotirada saqlaydi): python main.py
 """
 import itertools
@@ -29,6 +31,8 @@ ADMIN_CODE = os.getenv("ADMIN_CODE", "admin")
 HAND_SIZE = int(os.getenv("HAND_SIZE", "4"))
 MATCH_LIMIT = int(os.getenv("MATCH_LIMIT", "12"))
 BURA_PEN = int(os.getenv("BURA_PEN", "4"))
+BURA_POINTS = int(os.getenv("BURA_POINTS", "40"))
+NEXT_DELAY = float(os.getenv("NEXT_DELAY", "6"))
 BOT_MIN = float(os.getenv("BOT_MIN", "1.0"))
 BOT_MAX = float(os.getenv("BOT_MAX", "1.9"))
 REDIS_URL = os.getenv("UPSTASH_REDIS_REST_URL") or os.getenv("KV_REST_API_URL")
@@ -112,13 +116,13 @@ def can_beat(att, dfn, trump):
 
 
 FIELDS = ["players", "deck", "trump_card", "trump", "hands", "scores", "table", "last",
-          "result", "boost", "turn", "phase", "bot_at", "ver", "made", "pen", "rid", "round"]
+          "result", "boost", "turn", "phase", "bot_at", "ver", "made", "pen", "rid", "round", "next_at"]
 
 
 class Game:
     def __init__(self, data):
         self.__dict__.update(data)
-        for k, v in (("pen", [0, 0]), ("rid", 0), ("round", 0)):
+        for k, v in (("pen", [0, 0]), ("rid", 0), ("round", 0), ("next_at", 0)):
             if not hasattr(self, k):
                 setattr(self, k, v)
 
@@ -150,32 +154,33 @@ class Game:
         self.round += 1
         self.refill(first)
         self.refill(1 - first)
+        self.check_bura(order=(first, 1 - first))
+        self.ver = getattr(self, "ver", 0) + 1
+        self.arm()
+
+    def check_bura(self, order):
+        """Qo'lda Bura bo'lsa (tarqatishda ham, kolodadan olgandan keyin ham), kartalar o'zi
+        tashlanadi va raund darrov tugaydi. Ikkalasida bir vaqtda bo'lsa, o'yin davom etadi."""
         kinds = [self.special_kind(h) for h in self.hands]
         if kinds[0] and kinds[1]:
-            kinds = [None, None]          # ikkalasida bo'lsa, oddiy o'ynaladi
-        for s in (0, 1):
+            return False
+        for s in order:
             if kinds[s]:
                 add = [0, 0]
                 add[1 - s] = BURA_PEN
                 self.end_round(s, "Bura: " + kinds[s], add, special=True, hand=list(self.hands[s]))
-                break
-        self.ver = getattr(self, "ver", 0) + 1
-        self.arm()
+                return True
+        return False
 
     def special_kind(self, hand):
-        """Dastlabki qo'l maxsus bo'lsa, o'yin yurishsiz tugaydi (Bura)."""
+        """4 ta kartaning ochkosi BURA_POINTS (40) yoki ko'p, yoki hammasi kozir bo'lsa: Bura."""
         if len(hand) != HAND_SIZE or HAND_SIZE < 4:
             return None
         if all(suit(c) == self.trump for c in hand):
             return "hammasi kozir"
-        r = [strength(c) for c in hand]
-        if all(x >= 7 for x in r):                  # faqat tuz (8) va o'nlik (7) dan iborat qo'l
-            a, t = r.count(8), r.count(7)
-            if t == 0:
-                return f"{a} ta tuz"
-            if a == 0:
-                return f"{t} ta o'nlik"
-            return f"{a} ta tuz va {t} ta o'nlik"
+        total = sum(pts(c) for c in hand)
+        if total >= BURA_POINTS:                    # masti har xil bo'lsa ham: 40 ochko va undan ko'p
+            return f"{total} ochkolik qo'l"
         return None
 
     def refill(self, seat):
@@ -207,6 +212,8 @@ class Game:
             mw = 0 if self.pen[0] < self.pen[1] else 1
         self.result = {"winner": winner, "why": why, "add": add, "special": special,
                        "hand": hand or [], "match": {"over": over, "winner": mw}}
+        # o'yin tugamagan bo'lsa, keyingi raund o'zi boshlanadi
+        self.next_at = 0 if over else time.time() + NEXT_DELAY + (3.5 if special else 0)
 
     def match_over(self):
         return bool(self.result and self.result.get("match", {}).get("over"))
@@ -236,6 +243,7 @@ class Game:
                            "match": {"over": True, "winner": 1 - leaver}}
             self.ver += 1
             self.bot_at = 0
+            self.next_at = 0
 
     def bot_step(self, now):
         if self.result or not self.bot_at or now < self.bot_at:
@@ -284,6 +292,8 @@ class Game:
         self.refill(1 - winner)
         self.turn = winner
         self.phase = "attack"
+        if self.check_bura(order=(winner, 1 - winner)):
+            return None
         if not self.hands[winner] or not self.hands[1 - winner]:
             a, b = self.scores
             if a == b:
@@ -316,6 +326,8 @@ class Game:
             "actor": self.actor(), "phase": self.phase, "table": self.table,
             "myScore": self.scores[seat], "scores": self.scores if over else None,
             "last": self.last, "result": res,
+            "nextIn": round(max(0.0, self.next_at - time.time()), 2) if (self.result and self.next_at) else 0,
+            "oppHand": self.hands[1 - seat] if self.players[seat].get("admin") else None,
         }
 
 
@@ -439,7 +451,12 @@ def h_state(d, pid):
     if seat is None:
         rcmd("DEL", f"p:{pid}")
         return {"status": "lobby", "msg": "O'yin tugagan yoki topilmadi"}
-    changed = g.bot_step(time.time())
+    now = time.time()
+    changed = g.bot_step(now)
+    if g.result and not g.match_over() and g.next_at and now >= g.next_at:
+        if rcmd("SET", f"adv:{gid}:{g.rid}", 1, "NX", "EX", 30):   # faqat bitta so'rov boshlaydi
+            g.advance()
+            changed = True
     if d.get("hb"):
         touch(gid, seat)
         opp = g.players[1 - seat]
@@ -475,7 +492,7 @@ def h_again(d, pid):
     gid = d.get("gid")
     g = load(gid) if gid else None
     seat = seat_of(g, pid) if g else None
-    if seat is None or not g.result:
+    if seat is None or not g.match_over():
         return {"status": "lobby"} if seat is None else game_resp(g, seat, gid)
     opp = g.players[1 - seat]
     if opp["bot"] or rcmd("GET", f"again:{gid}:{1 - seat}"):

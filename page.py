@@ -42,9 +42,10 @@ input::placeholder{color:rgba(242,234,214,.5)}
 /* ---------- lobby ---------- */
 .page{min-height:100%;padding:34px 22px 40px;max-width:520px;margin:0 auto;position:relative}
 .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-h1{font-family:var(--serif);font-size:56px;line-height:1;margin:0 0 6px;font-weight:700}
+h1{font-family:var(--serif);font-size:60px;line-height:1;margin:0 0 6px;font-weight:700;letter-spacing:.02em;background:linear-gradient(180deg,#fbf2d4,#c9a04a 70%,#8d6a22);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 rgba(0,0,0,.35))}
 .lead{margin:0 0 26px;color:var(--muted);line-height:1.5;max-width:32ch}
-.hero{--cw:50px;position:relative;width:120px;height:92px;flex:none;margin-top:4px}
+.hero{--cw:54px;position:relative;width:130px;height:100px;flex:none;margin-top:4px;animation:float 4s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-5px)}}
 .hero .card{position:absolute;bottom:0;left:50%;margin-left:-25px;transform-origin:50% 130%}
 .hero-tools{position:absolute;top:14px;right:18px}
 .block{padding:18px 0;border-top:1px solid rgba(242,234,214,.2)}
@@ -83,6 +84,9 @@ details.rules ul{margin:6px 0 10px;padding-left:18px}
 .oppzone .fan{display:flex}
 .oppzone .card{margin-left:calc(var(--cws)*-.5)}
 .oppzone .card:first-child{margin-left:0}
+.oppzone.reveal{height:auto;min-height:calc(var(--cws)*1.4 + 14px)}
+.oppzone.reveal .card{margin-left:calc(var(--cws)*-.18)}
+.oppzone.reveal .card:first-child{margin-left:0}
 .oppzone .card.dealt{animation:oppIn .4s ease-out backwards;animation-delay:calc(var(--i)*.08s)}
 .mid{flex:1;min-height:0;display:flex;align-items:center;justify-content:space-around;padding:0 10px;gap:8px}
 .deckwrap{position:relative;width:calc(var(--cws)*2.2);height:calc(var(--cws)*1.4);flex:none}
@@ -120,30 +124,44 @@ details.rules ul{margin:6px 0 10px;padding-left:18px}
 
 /* ---------- kartalar ---------- */
 .card{--cw:inherit;position:relative;flex:none;width:var(--cw);height:calc(var(--cw)*1.4);font-size:calc(var(--cw)/10);
-  border-radius:calc(var(--cw)*.07);background:linear-gradient(160deg,#f7f1e0,#eadfc5);color:var(--ink);
-  box-shadow:0 1px 0 #fff8 inset,0 1px 1px rgba(0,0,0,.5),0 3px 6px rgba(0,0,0,.35);user-select:none}
-.card.red{color:var(--red)}
+  border-radius:calc(var(--cw)*.075);color:var(--ink);user-select:none;
+  background:
+    radial-gradient(120% 80% at 30% 10%,rgba(255,255,255,.75),transparent 60%),
+    linear-gradient(165deg,#fbf6e8,#efe3c8 70%,#e6d7b6);
+  box-shadow:0 0 0 1px rgba(60,40,10,.55),0 1px 0 #fff9 inset,0 -2px 3px rgba(120,90,40,.18) inset,0 4px 9px rgba(0,0,0,.4)}
+.card::before{content:"";position:absolute;inset:.35em;border:1px solid rgba(120,90,40,.28);border-radius:calc(var(--cw)*.05);pointer-events:none}
+.card.red{color:#b3201a}
 .card .idx{position:absolute;display:flex;flex-direction:column;align-items:center;line-height:1;width:2.6em}
-.card .idx b{font-family:var(--serif);font-size:1.6em;font-weight:700;letter-spacing:-.06em}
-.card .idx svg{width:1.25em;height:1.25em;fill:currentColor;margin-top:.12em}
-.card .tl{top:.55em;left:.45em}
-.card .br{bottom:.55em;right:.45em;transform:rotate(180deg)}
+.card .idx b{font-family:var(--serif);font-size:1.65em;font-weight:700;letter-spacing:-.06em}
+.card .idx svg{width:1.25em;height:1.25em;fill:currentColor;margin-top:.1em}
+.card .tl{top:.6em;left:.5em}
+.card .br{bottom:.6em;right:.5em;transform:rotate(180deg)}
 .card .field{position:absolute;inset:0}
 .card .pip{position:absolute;width:19%;aspect-ratio:1;transform:translate(-50%,-50%)}
 .card .pip.flip{transform:translate(-50%,-50%) rotate(180deg)}
-.card .pip.big{width:44%}
-.card .pip svg{display:block;width:100%;height:100%;fill:currentColor}
-.card .royal{position:absolute;left:25%;right:25%;top:11%;bottom:11%;border:1px solid currentColor;display:flex;flex-direction:column;
-  align-items:center;justify-content:space-between;padding:.5em 0;
-  background:repeating-linear-gradient(135deg,rgba(0,0,0,.05) 0 2px,transparent 2px 6px)}
-.card .royal b{font-family:var(--serif);font-size:3.4em;line-height:1;font-weight:700}
-.card .royal svg{width:1.7em;height:1.7em;fill:currentColor}
-.card .royal svg:last-child{transform:rotate(180deg)}
-.card.back{background:#7c1d1a;border:calc(var(--cw)*.06) solid #f2ead6}
-.card.back::after{content:"";position:absolute;inset:calc(var(--cw)*.05);border:1px solid rgba(242,234,214,.7);
+.card .pip.big{width:50%}
+.card .pip svg{display:block;width:100%;height:100%;fill:currentColor;filter:drop-shadow(0 .5px 0 rgba(0,0,0,.15))}
+.card .ace-ring{position:absolute;left:50%;top:50%;width:62%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;
+  border:1px solid rgba(201,160,74,.65);background:radial-gradient(circle,rgba(201,160,74,.14),transparent 70%)}
+.card .royal{position:absolute;left:21%;right:21%;top:12%;bottom:12%;border:1px solid currentColor;border-radius:2px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(201,160,74,.34),rgba(201,160,74,.1) 50%,rgba(201,160,74,.34));
+  box-shadow:0 0 0 2px rgba(251,246,232,.9),0 0 0 3px rgba(201,160,74,.7)}
+.card .royal .half{position:absolute;left:0;right:0;top:0;height:50%;display:flex;align-items:flex-end;justify-content:center}
+.card .royal .half.b{top:auto;bottom:0;transform:rotate(180deg)}
+.card .royal .half svg.fig{width:100%;height:100%;display:block}
+.card .royal .half svg.mini{position:absolute;left:5%;top:6%;width:22%;aspect-ratio:1;fill:currentColor}
+.card .royal::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:currentColor;opacity:.55}
+.card.back{background:#5d1316;box-shadow:0 0 0 1px rgba(0,0,0,.65),0 4px 9px rgba(0,0,0,.45)}
+.card.back::before{inset:calc(var(--cw)*.05);border:calc(var(--cw)*.025) solid #e9dcb8;border-radius:calc(var(--cw)*.04);
   background:
-    repeating-linear-gradient(45deg,rgba(242,234,214,.28) 0 1px,transparent 1px 7px),
-    repeating-linear-gradient(-45deg,rgba(242,234,214,.28) 0 1px,transparent 1px 7px)}
+    radial-gradient(circle at 50% 50%,#c9a04a 0 6%,transparent 6.5%),
+    conic-gradient(from 45deg at 50% 50%,rgba(233,220,184,.0) 0 25%,rgba(233,220,184,.0) 0),
+    repeating-linear-gradient(45deg,rgba(233,220,184,.3) 0 1px,transparent 1px calc(var(--cw)*.09)),
+    repeating-linear-gradient(-45deg,rgba(233,220,184,.3) 0 1px,transparent 1px calc(var(--cw)*.09)),
+    #6f171b}
+.card.back::after{content:"";position:absolute;left:50%;top:50%;width:34%;aspect-ratio:.72;transform:translate(-50%,-50%) rotate(45deg) scale(.7);
+  background:#6f171b;border:calc(var(--cw)*.03) solid #c9a04a;outline:calc(var(--cw)*.015) solid #6f171b}
+.card.reveal{box-shadow:0 0 0 1.5px #c9a04a,0 4px 9px rgba(0,0,0,.45)}
 
 /* ---------- natija va Bura ---------- */
 #over{position:fixed;inset:0;background:rgba(8,18,13,.82);display:flex;align-items:center;justify-content:center;padding:24px;z-index:10}
@@ -153,6 +171,9 @@ details.rules ul{margin:6px 0 10px;padding-left:18px}
 #over p.pen{color:var(--cream)}
 #over p.tot{margin-top:10px;padding-top:10px;border-top:1px solid rgba(242,234,214,.2)}
 #over .row{margin-top:18px}
+#over p.next{margin-top:12px;color:var(--brass);font-family:var(--serif);font-size:18px}
+#over .bar{height:3px;background:rgba(242,234,214,.15);margin-top:8px;border-radius:2px;overflow:hidden}
+#over .bar i{display:block;height:100%;background:var(--brass);width:100%}
 #over .row .btn{flex:1}
 #bura{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,rgba(40,28,6,.82),rgba(6,12,9,.92));animation:fade .25s}
 .bura-box{text-align:center;padding:20px}
@@ -171,7 +192,7 @@ details.rules ul{margin:6px 0 10px;padding-left:18px}
 .hand .card{width:var(--cw);height:calc(var(--cw)*1.4);font-size:calc(var(--cw)/10)}
 .hero .card,.bura-cards .card{width:var(--cw);height:calc(var(--cw)*1.4);font-size:calc(var(--cw)/10)}
 @media(min-width:760px){#game{--cw:92px;--cws:70px}}
-@media(prefers-reduced-motion:reduce){.hand .card,.hand .card.dealt,.oppzone .card.dealt,.trick .card.fresh,.bura-title,#bura,#over .box{animation:none}.hand .card{transition:none}}
+@media(prefers-reduced-motion:reduce){.hero{animation:none}.hand .card,.hand .card.dealt,.oppzone .card.dealt,.trick .card.fresh,.bura-title,#bura,#over .box{animation:none}.hand .card{transition:none}}
 </style>
 </head>
 <body>
@@ -227,7 +248,7 @@ details.rules ul{margin:6px 0 10px;padding-left:18px}
       <li>Yutgan 91 dan 119 gacha olsa: raqibga 4 bal</li>
       <li>Raqib bitta ham ochko ola olmasa: 6 bal</li>
     </ul>
-    <p><b>Bura:</b> dastlabki qo'lda 4 ta karta ham tuz yoki o'nlik bo'lsa (4 tuz, 4 o'nlik, 3 tuz va o'nlik, 2 tuz va 2 o'nlik...) yoki hammasi kozir bo'lsa, kartalar o'zi tashlanadi va raund darrov tugaydi. Raqibga 4 bal yoziladi.</p>
+    <p><b>Bura:</b> qo'lingizdagi 4 ta kartaning ochkosi 40 yoki undan ko'p bo'lsa (tarqatishda ham, o'yin o'rtasida kolodadan olganda ham) (masti har xil bo'lsa ham, masalan 4 tuz, 2 tuz va 2 o'nlik) yoki hammasi kozir bo'lsa, kartalar o'zi tashlanadi va raund darrov tugaydi. Raqibga 4 bal yoziladi. Keyingi raund o'zi boshlanadi.</p>
   </details>
 
   <div class="codefield">
@@ -249,7 +270,7 @@ details.rules ul{margin:6px 0 10px;padding-left:18px}
     <div class="mid-top"><span id="roundNo"></span><button class="snd" id="sndGame" aria-label="Ovozni yoqish yoki o'chirish"></button></div>
     <div class="side right"><div class="nm">Siz</div><div class="dots" id="myDots"></div><div class="cap">sizning balingiz</div></div>
   </div>
-  <div class="oppzone"><div class="fan" id="oppCards"></div></div>
+  <div class="oppzone" id="oppZone"><div class="fan" id="oppCards"></div></div>
   <div class="mid">
     <div class="deckwrap" id="deck"></div>
     <div class="play">
@@ -275,7 +296,8 @@ details.rules ul{margin:6px 0 10px;padding-left:18px}
 <div id="over" hidden><div class="box">
   <h2 id="oTitle"></h2>
   <p id="oWhy"></p><p id="oScore"></p><p class="pen" id="oPen"></p><p class="tot" id="oTot"></p><p id="oWait"></p>
-  <div class="row"><button class="btn brass" id="again">Keyingi raund</button><button class="btn quiet" id="exit">Chiqish</button></div>
+  <p class="next" id="oNext"></p>
+  <div class="row"><button class="btn brass" id="again" hidden>Yangi o'yin</button><button class="btn quiet" id="exit">Chiqish</button></div>
 </div></div>
 
 <script>
@@ -286,57 +308,81 @@ const isRed = s => s === 1 || s === 2;   // 0 qarg'a, 1 chillak, 2 g'isht, 3 xoc
 const pid = localStorage.buraPid || (localStorage.buraPid =
   (window.crypto && crypto.randomUUID ? crypto.randomUUID().replace(/-/g, "") : Math.random().toString(16).slice(2) + Date.now().toString(16) + Math.random().toString(16).slice(2)));
 let S = null, sel = new Set(), view = "lobby", room = null, gid = null, v = -1, busy = false, timer = null, lastHb = 0;
-let animDeal = false, animThrow = false, buraUntil = 0;
+let animDeal = false, animThrow = false, buraUntil = 0, nextAt = 0;
 
 $("name").value = localStorage.buraName || "";
 $("code").value = localStorage.buraCode || "";
 
 /* ---------- ovoz (hammasi brauzerning o'zida hosil qilinadi) ---------- */
 const AC = window.AudioContext || window.webkitAudioContext;
-let ctx = null, muted = localStorage.buraMute === "1";
+let ctx = null, master = null, muted = localStorage.buraMute === "1";
 function audio(){
-  if (!ctx && AC) { try { ctx = new AC(); } catch (e) { ctx = null; } }
+  if (!ctx && AC) {
+    try {
+      ctx = new AC();
+      master = ctx.createGain(); master.gain.value = .9;
+      const comp = ctx.createDynamicsCompressor(); master.connect(comp); comp.connect(ctx.destination);
+      // yengil xona aks-sadosi
+      const n = Math.floor(ctx.sampleRate * .45), ib = ctx.createBuffer(2, n, ctx.sampleRate);
+      for (let ch = 0; ch < 2; ch++){ const d = ib.getChannelData(ch); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3); }
+      const conv = ctx.createConvolver(); conv.buffer = ib; const wet = ctx.createGain(); wet.gain.value = .16;
+      master.connect(conv); conv.connect(wet); wet.connect(comp);
+    } catch (e) { ctx = null; }
+  }
   if (ctx && ctx.state === "suspended") ctx.resume();
   return ctx;
 }
-function noiseBuf(c, dur){
+function noise(c, dur, pow){
   const n = Math.floor(c.sampleRate * dur), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0);
-  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.5);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, pow || 2);
   return b;
 }
-function flick(delay, vol, freq){
+/* qog'oz karta sirpanishi: filtrdan o'tgan shovqin, chastota tez o'zgaradi */
+function slide(delay, vol, dur){
   if (muted) return; const c = audio(); if (!c) return;
-  const t = c.currentTime + (delay || 0), s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
-  s.buffer = noiseBuf(c, .09); f.type = "bandpass"; f.frequency.value = freq || 3000; f.Q.value = .8; g.gain.value = vol || .5;
-  s.connect(f); f.connect(g); g.connect(c.destination); s.start(t);
+  const t = c.currentTime + (delay || 0), d = dur || .16;
+  const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+  s.buffer = noise(c, d, 1.6); f.type = "bandpass"; f.Q.value = 1.1;
+  f.frequency.setValueAtTime(1500, t); f.frequency.exponentialRampToValueAtTime(5200, t + d * .8);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol || .5, t + .015); g.gain.exponentialRampToValueAtTime(.001, t + d);
+  s.connect(f); f.connect(g); g.connect(master); s.start(t);
 }
-function thump(delay, vol){
+/* karta stolga tushganda "tak" */
+function slap(delay, vol){
   if (muted) return; const c = audio(); if (!c) return;
-  const t = c.currentTime + (delay || 0), o = c.createOscillator(), g = c.createGain();
-  o.frequency.setValueAtTime(170, t); o.frequency.exponentialRampToValueAtTime(55, t + .09);
-  g.gain.setValueAtTime(vol || .45, t); g.gain.exponentialRampToValueAtTime(.001, t + .12);
-  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + .13);
+  const t = c.currentTime + (delay || 0);
+  const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+  s.buffer = noise(c, .07, 3); f.type = "lowpass"; f.frequency.value = 2200; g.gain.value = vol || .8;
+  s.connect(f); f.connect(g); g.connect(master); s.start(t);
+  const o = c.createOscillator(), og = c.createGain();
+  o.frequency.setValueAtTime(190, t); o.frequency.exponentialRampToValueAtTime(60, t + .08);
+  og.gain.setValueAtTime((vol || .8) * .7, t); og.gain.exponentialRampToValueAtTime(.001, t + .11);
+  o.connect(og); og.connect(master); o.start(t); o.stop(t + .12);
 }
-function tone(freq, delay, dur, type, vol){
+function tone(freq, delay, dur, type, vol, bend){
   if (muted) return; const c = audio(); if (!c) return;
   const t = c.currentTime + delay, o = c.createOscillator(), g = c.createGain();
-  o.type = type || "triangle"; o.frequency.value = freq;
-  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol || .22, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
-  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + .02);
+  o.type = type || "triangle"; o.frequency.setValueAtTime(freq, t);
+  if (bend) o.frequency.exponentialRampToValueAtTime(bend, t + dur);
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol || .2, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .03);
 }
 const sfx = {
-  deal(n){ for (let i = 0; i < (n || 4) * 2; i++) flick(i * .07, .45, 2400 + Math.random() * 1400); },
-  throwCard(){ flick(0, .9, 1500); thump(0, .5); },
-  tick(){ flick(0, .25, 4200); },
-  chime(){ tone(784, 0, .25, "sine", .18); tone(1047, .08, .3, "sine", .14); },
-  low(){ tone(196, 0, .25, "sine", .16); },
-  win(){ [523, 659, 784, 1047].forEach((f, i) => tone(f, i * .11, .35, "triangle", .2)); },
-  lose(){ [392, 330, 262].forEach((f, i) => tone(f, i * .16, .4, "triangle", .18)); },
+  deal(n){ for (let i = 0; i < (n || 4) * 2; i++){ slide(i * .1, .4, .13); if (i % 2) slap(i * .1 + .09, .22); } },
+  throwCard(){ slide(0, .6, .14); slap(.1, .85); },
+  tick(){ slide(0, .22, .06); },
+  pick(){ slide(0, .3, .08); },
+  chime(){ tone(784, 0, .3, "sine", .18); tone(1047, .09, .4, "sine", .15); tone(1319, .18, .5, "sine", .1); },
+  low(){ tone(220, 0, .35, "sine", .16, 160); },
+  win(){ [523, 659, 784, 1047, 1319].forEach((f, i) => { tone(f, i * .12, .45, "triangle", .2); tone(f * 2, i * .12, .3, "sine", .05); }); },
+  lose(){ [392, 349, 311, 262].forEach((f, i) => tone(f, i * .18, .5, "triangle", .17)); },
   bura(){
-    [392, 523, 659, 784].forEach((f, i) => tone(f, i * .12, .5, "sawtooth", .12));
-    [523, 659, 784, 1047].forEach(f => tone(f, .55, 1.1, "triangle", .16));
-    thump(0, .7);
-  }
+    slap(0, 1);
+    [196, 262, 330, 392].forEach((f, i) => tone(f, i * .13, .55, "sawtooth", .1));
+    [523, 659, 784, 1047].forEach(f => { tone(f, .6, 1.4, "triangle", .15); tone(f / 2, .6, 1.4, "sine", .12); });
+    for (let i = 0; i < 6; i++) tone(1568 + i * 220, .7 + i * .09, .25, "sine", .06);
+  },
+  count(){ tone(880, 0, .12, "sine", .08); }
 };
 function syncSound(){
   ["sndLobby", "sndGame"].forEach(id => {
@@ -415,8 +461,8 @@ function apply(j){
   } else if (j.status === "game"){
     if (j.waitAgain) $("oWait").textContent = "Raqib javobi kutilmoqda";
     if (j.same) return;
-    const old = S;
-    S = j.state; gid = S.gid; v = S.v; sel.clear();
+    const old = S; const hadOver = !$("over").hidden;
+    S = j.state; gid = S.gid; v = S.v; sel.clear(); nextAt = Date.now() + (S.nextIn || 0) * 1000;
     $("oWait").textContent = ""; $("err").textContent = "";
     events(old, S);
     setView("game"); render();
@@ -428,7 +474,7 @@ function schedule(){
   clearTimeout(timer);
   let ms = 0;
   if (view === "wait") ms = 1500;
-  else if (view === "game") ms = S && S.result ? 2500 : (S && S.actor === S.me ? 3000 : 1000);
+  else if (view === "game") ms = S && S.result ? (((S.result.match || {}).over) ? 2500 : 900) : (S && S.actor === S.me ? 3000 : 1000);
   if (ms) timer = setTimeout(poll, ms);
 }
 async function poll(){
@@ -456,13 +502,24 @@ function pips(r){
   if (r === 3) return [...four,[C,50]];
   return [...four,[C,30],[C,70]];            // 10
 }
+const FIG = {
+  6: '<svg class="fig" viewBox="0 0 60 40"><path d="M9 40C11 29 22 28 30 28s19 1 21 12z" fill="currentColor" opacity=".85"/><path d="M26 28l4 5 4-5" fill="#f4e6c8"/><circle cx="30" cy="19" r="8" fill="#f3d9b5" stroke="currentColor" stroke-width=".8"/><path d="M22 17c2-7 14-8 17-1-4-2-12-3-17 1z" fill="currentColor"/><path d="M40 11c9-6 13 2 9 8-1-5-4-7-9-8z" fill="#c9a04a" stroke="currentColor" stroke-width=".5"/><circle cx="27" cy="19" r=".9" fill="#222"/><circle cx="33" cy="19" r=".9" fill="#222"/></svg>',
+  5: '<svg class="fig" viewBox="0 0 60 40"><path d="M9 40C11 29 22 28 30 28s19 1 21 12z" fill="currentColor" opacity=".85"/><path d="M21 17c-2 10 0 16 4 17l1-14zM39 17c2 10 0 16-4 17l-1-14z" fill="currentColor"/><circle cx="30" cy="19" r="8" fill="#f3d9b5" stroke="currentColor" stroke-width=".8"/><path d="M21 16C22 9 38 9 39 16c-4-3-14-3-18 0z" fill="currentColor"/><path d="M21 12l2-8 5 5 2-6 2 6 5-5 2 8z" fill="#c9a04a" stroke="currentColor" stroke-width=".5"/><circle cx="30" cy="8" r="1.4" fill="#b3201a"/><circle cx="27" cy="19" r=".9" fill="#222"/><circle cx="33" cy="19" r=".9" fill="#222"/></svg>',
+  6.5: ''
+};
+FIG[6] = FIG[6];
+const FIGK = '<svg class="fig" viewBox="0 0 60 40"><path d="M7 40C9 29 21 28 30 28s21 1 23 12z" fill="currentColor" opacity=".85"/><path d="M28 28l2 6 2-6z" fill="#c9a04a"/><circle cx="30" cy="19" r="8.5" fill="#f3d9b5" stroke="currentColor" stroke-width=".8"/><path d="M22 20c1 11 15 11 16 0-3 5-13 5-16 0z" fill="currentColor"/><path d="M21 13l1-9 6 5 2-7 2 7 6-5 1 9z" fill="#c9a04a" stroke="currentColor" stroke-width=".5"/><path d="M30 0v3M28.5 1.4h3" stroke="currentColor" stroke-width="1"/><circle cx="27" cy="18.5" r=".9" fill="#222"/><circle cx="33" cy="18.5" r=".9" fill="#222"/></svg>';
 function cardEl(c){
   const s = suit(c), r = rank(c), label = RANKS[r];
   const el = document.createElement("div");
   el.className = "card " + (isRed(s) ? "red" : "blk");
   let h = '<div class="idx tl"><b>' + label + '</b>' + sv(s) + '</div><div class="idx br"><b>' + label + '</b>' + sv(s) + '</div><div class="field">';
-  if (r === 8) h += '<span class="pip big" style="left:50%;top:50%">' + sv(s) + '</span>';
-  else if (r >= 4 && r <= 6) h += '<div class="royal">' + sv(s) + '<b>' + label + '</b>' + sv(s) + '</div>';
+  if (r === 8) h += '<span class="ace-ring"></span><span class="pip big" style="left:50%;top:50%">' + sv(s) + '</span>';
+  else if (r >= 4 && r <= 6){
+    const fig = r === 4 ? FIG[6] : (r === 5 ? FIG[5] : FIGK);
+    const half = '<svg class="mini" viewBox="0 0 100 100"><use href="#s' + s + '"/></svg>' + fig;
+    h += '<div class="royal"><div class="half">' + half + '</div><div class="half b">' + half + '</div></div>';
+  }
   else pips(r).forEach(p => { h += '<span class="pip' + (p[1] > 50 ? " flip" : "") + '" style="left:' + p[0] + '%;top:' + p[1] + '%">' + sv(s) + '</span>'; });
   el.innerHTML = h + '</div>';
   return el;
@@ -492,7 +549,10 @@ function render(){
   fillDots($("oppDots"), S.pen[1], S.limit);
 
   const oc = $("oppCards"); oc.replaceChildren();
-  for (let i = 0; i < S.oppN; i++){
+  $("oppZone").classList.toggle("reveal", !!S.oppHand);
+  if (S.oppHand){
+    [...S.oppHand].sort((a, b) => suit(a) - suit(b) || rank(b) - rank(a)).forEach(c => { const e = cardEl(c); e.classList.add("reveal"); oc.append(e); });
+  } else for (let i = 0; i < S.oppN; i++){
     const b = backEl(); if (animDeal){ b.classList.add("dealt"); b.style.setProperty("--i", i); } oc.append(b);
   }
 
@@ -533,7 +593,7 @@ function render(){
     e.style.setProperty("--y", (Math.abs(off) * Math.abs(off) * 2) + "px");
     if (animDeal){ e.classList.add("dealt"); e.style.setProperty("--i", i); }
     if (sel.has(c)) e.classList.add("sel");
-    e.onclick = () => { if (!mine || S.result) return; sel.has(c) ? sel.delete(c) : sel.add(c); sfx.tick(); render(); };
+    e.onclick = () => { if (!mine || S.result) return; sel.has(c) ? sel.delete(c) : sel.add(c); sfx.pick(); render(); };
     hand.append(e);
   });
 
@@ -556,11 +616,20 @@ function render(){
     $("oScore").textContent = (S.scores && !r.special) ? "Ochko: siz " + S.scores[S.me] + ", raqib " + S.scores[1 - S.me] : "";
     $("oPen").textContent = add[0] > 0 ? "Sizga +" + add[0] + " bal" : (add[1] > 0 ? "Raqibga +" + add[1] + " bal" : "Bal berilmadi");
     $("oTot").textContent = "Bal: siz " + S.pen[0] + ", raqib " + S.pen[1] + " (" + S.limit + " ga yetgan yutqazadi)";
-    $("again").textContent = m.over ? "Yangi o'yin" : "Keyingi raund";
+    $("again").hidden = !m.over;
     $("again").disabled = false;
+    $("oNext").hidden = !!m.over;
     $("over").hidden = false;
+    tickNext();
   } else $("over").hidden = true;
 }
+function tickNext(){
+  if (!S || !S.result || (S.result.match || {}).over){ return; }
+  const left = Math.max(0, Math.ceil((nextAt - Date.now()) / 1000));
+  $("oNext").textContent = left > 0 ? "Keyingi raund " + left + " soniyadan keyin boshlanadi" : "Keyingi raund boshlanmoqda";
+}
+setInterval(() => { if (!$("over").hidden) tickNext(); }, 250);
+
 
 $("vsBot").onclick = () => act("bot");
 $("create").onclick = () => { $("err").textContent = ""; act("create"); };
